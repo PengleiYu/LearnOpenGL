@@ -26,11 +26,64 @@
 
 using namespace std;
 
-void init(GLFWwindow* window){}
+#define numVAOs 1
 
+GLuint renderingProgram;
+GLuint vao[numVAOs];
+
+GLuint createShaderProgram(){
+    // 顶点着色器源码
+    const char* vshaderSource =R"(
+    #version 410
+    void main(void) {
+        gl_Position = vec4(0.0,0.0,0.0,1.0);
+    }
+)";
+    // 片段着色器源码
+    const char *fshaderSource =R"(
+    #version 410
+    out vec4 color;
+    void main(void) {
+        color=vec4(0.0,0.0,1.0,1.0);
+    }
+)";
+    
+    
+    // 创建着色器代码对象
+    GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
+    GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
+    // 创建着色器程序对象
+    GLuint vfProgram = glCreateProgram();
+    
+    // 设置着色器源码
+    glShaderSource(vShader,1,&vshaderSource,NULL);
+    glShaderSource(fShader,1,&fshaderSource,NULL);
+    // 编译着色器代码
+    glCompileShader(vShader);
+    glCompileShader(fShader);
+    
+    // 着色器程序添加着色器代码
+    glAttachShader(vfProgram,vShader);
+    glAttachShader(vfProgram,fShader);
+    // 链接着色器程序
+    glLinkProgram(vfProgram);
+    
+    return vfProgram;
+}
+
+void init(GLFWwindow* window){
+    renderingProgram = createShaderProgram();
+    // 创建顶点数组缓冲区
+    glGenVertexArrays(numVAOs,vao);
+    glBindVertexArray(vao[0]);
+}
 void display(GLFWwindow* window, double currentTime){
-    glClearColor(1.0, 0.0, 1.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
+    // 运行着色器程序
+    glUseProgram(renderingProgram);
+    glPointSize(30.0f);
+    // 绘制缓冲区内容
+    glDrawArrays(GL_POINTS, 0, 1);
 }
 
 int main(void){
