@@ -31,7 +31,47 @@ using namespace std;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 
+void printShaderLog(GLuint shader) {
+    int len = 0;
+    int chWrittn = 0;
+    char *log;
+    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
+    if (len > 0) {
+        log = (char *)malloc(len);
+        glGetShaderInfoLog(shader, len, &chWrittn, log);
+        cout << "Shader Info Log: " << log << endl;
+        free(log);
+    }
+}
+
+void printProgramLog(int prog) {
+    int len = 0;
+    int chWrittn = 0;
+    char *log;
+    glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
+    if (len > 0) {
+        log = (char *)malloc(len);
+        glGetProgramInfoLog(prog, len, &chWrittn, log);
+        cout << "Program Info Log: " << log << endl;
+        free(log);
+    }
+}
+
+bool checkOpenGLError() {
+    bool foundError = false;
+    int glErr = glGetError();
+    while (glErr != GL_NO_ERROR) {
+        cout << "glError: " << glErr << endl;
+        foundError = true;
+        glErr = glGetError();
+    }
+    return foundError;
+}
+
 GLuint createShaderProgram(){
+    GLint vertCompiled;
+    GLint fragCompiled;
+    GLint linked;
     // 顶点着色器源码
     const char* vshaderSource =R"(
     #version 410
@@ -44,7 +84,10 @@ GLuint createShaderProgram(){
     #version 410
     out vec4 color;
     void main(void) {
-        color=vec4(0.0,0.0,1.0,1.0);
+        if(gl_FragCoord.x<295)
+            color = vec4(0.0,1.0,0.0,1.0);
+        else
+            color=vec4(0.0,0.0,1.0,1.0);
     }
 )";
     
@@ -58,15 +101,37 @@ GLuint createShaderProgram(){
     // 设置着色器源码
     glShaderSource(vShader,1,&vshaderSource,NULL);
     glShaderSource(fShader,1,&fshaderSource,NULL);
+    
     // 编译着色器代码
     glCompileShader(vShader);
+    checkOpenGLError();
+    glGetShaderiv(vShader,GL_COMPILE_STATUS,&vertCompiled);
+    if(vertCompiled!=1){
+        cout << "vertex compilation failed" << endl;
+        printShaderLog(vShader);
+    }
+    
     glCompileShader(fShader);
+    checkOpenGLError();
+    glGetShaderiv(fShader,GL_COMPILE_STATUS,&fragCompiled);
+    if(fragCompiled!=1){
+        cout << "fragment compilation failed" << endl;
+        printShaderLog(fShader);
+    }
+    
     
     // 着色器程序添加着色器代码
     glAttachShader(vfProgram,vShader);
     glAttachShader(vfProgram,fShader);
     // 链接着色器程序
     glLinkProgram(vfProgram);
+    checkOpenGLError();
+    glGetProgramiv(vfProgram,GL_COMPILE_STATUS,&linked);
+    if(linked!=1){
+        cout << "link failed" << endl;
+        printProgramLog(vfProgram);
+    }
+    
     
     return vfProgram;
 }
@@ -87,6 +152,7 @@ void display(GLFWwindow* window, double currentTime){
 }
 
 int main(void){
+    cout << "start main" << endl;
     // 初始化glfw
     if(!glfwInit()){
         exit(EXIT_FAILURE);
@@ -130,7 +196,7 @@ int main(void){
         // 处理窗口相关事件
         glfwPollEvents();
     }
-    
+    cout << "exit main" << endl;
     glfwDestroyWindow(window);
     glfwTerminate();
     exit(EXIT_SUCCESS);
