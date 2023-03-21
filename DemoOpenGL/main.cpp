@@ -38,7 +38,7 @@ float x = 0.0f;// 三角形x轴坐标
 float inc = 0.01f;// 三角形移动距离
 
 void init(GLFWwindow* window){
-    renderingProgram = Utils::createShaderProgram("/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/vertShader.glsl","/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/fragShader.glsl");
+    renderingProgram = Utils::createShaderProgram("vertShader.glsl","fragShader.glsl");
     // 创建顶点数组缓冲区
     glGenVertexArrays(numVAOs,vao);
     glBindVertexArray(vao[0]);
