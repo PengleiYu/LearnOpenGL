@@ -25,6 +25,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include "Utils.h"
 
 using namespace std;
 
@@ -36,117 +37,8 @@ GLuint offsetLoc;
 float x = 0.0f;// 三角形x轴坐标
 float inc = 0.01f;// 三角形移动距离
 
-string readFile(const char *filePath) {
-    string content;
-    ifstream fileStream(filePath, ios::in);
-    string line = "";
-    if(!fileStream){
-        const std::__fs::filesystem::path &currentPath = std::__fs::filesystem::current_path();
-        stringstream ss ;
-        ss << "open " << filePath << " fail, current dir=" << currentPath;
-        throw runtime_error(ss.str());
-    }
-    while (!fileStream.eof()) {
-        getline(fileStream, line);
-        content.append(line + "\n");
-    }
-    fileStream.close();
-    return content;
-}
-
-void printShaderLog(GLuint shader) {
-    int len = 0;
-    int chWrittn = 0;
-    char *log;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &len);
-    if (len > 0) {
-        log = (char *)malloc(len);
-        glGetShaderInfoLog(shader, len, &chWrittn, log);
-        cout << "Shader Info Log: " << log << endl;
-        free(log);
-    }
-}
-
-void printProgramLog(int prog) {
-    int len = 0;
-    int chWrittn = 0;
-    char *log;
-    glGetProgramiv(prog, GL_INFO_LOG_LENGTH, &len);
-    if (len > 0) {
-        log = (char *)malloc(len);
-        glGetProgramInfoLog(prog, len, &chWrittn, log);
-        cout << "Program Info Log: " << log << endl;
-        free(log);
-    }
-}
-
-bool checkOpenGLError() {
-    bool foundError = false;
-    int glErr = glGetError();
-    while (glErr != GL_NO_ERROR) {
-        cout << "glError: " << glErr << endl;
-        foundError = true;
-        glErr = glGetError();
-    }
-    return foundError;
-}
-
-GLuint createShaderProgram(){
-    GLint vertCompiled;
-    GLint fragCompiled;
-    GLint linked;
-    
-    // 创建着色器代码对象
-    GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
-    GLuint fShader = glCreateShader(GL_FRAGMENT_SHADER);
-    // 创建着色器程序对象
-    GLuint vfProgram = glCreateProgram();
-    
-    string vertShaderStr = readFile("/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/vertShader.glsl");
-    string fragShaderStr = readFile("/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/fragShader.glsl");
-    const char *vertShaderSrc = vertShaderStr.c_str();
-    const char *fragShaderSrc = fragShaderStr.c_str();
-    
-    // 设置着色器源码
-    glShaderSource(vShader,1,&vertShaderSrc,NULL);
-    glShaderSource(fShader,1,&fragShaderSrc,NULL);
-    
-    // 编译着色器代码
-    glCompileShader(vShader);
-    checkOpenGLError();
-    glGetShaderiv(vShader,GL_COMPILE_STATUS,&vertCompiled);
-    if(vertCompiled!=1){
-        cout << "vertex compilation failed" << endl;
-        printShaderLog(vShader);
-    }
-    
-    glCompileShader(fShader);
-    checkOpenGLError();
-    glGetShaderiv(fShader,GL_COMPILE_STATUS,&fragCompiled);
-    if(fragCompiled!=1){
-        cout << "fragment compilation failed" << endl;
-        printShaderLog(fShader);
-    }
-    
-    
-    // 着色器程序添加着色器代码
-    glAttachShader(vfProgram,vShader);
-    glAttachShader(vfProgram,fShader);
-    // 链接着色器程序
-    glLinkProgram(vfProgram);
-    checkOpenGLError();
-    glGetProgramiv(vfProgram,GL_COMPILE_STATUS,&linked);
-    if(linked!=1){
-        cout << "link failed" << endl;
-        printProgramLog(vfProgram);
-    }
-    
-    
-    return vfProgram;
-}
-
 void init(GLFWwindow* window){
-    renderingProgram = createShaderProgram();
+    renderingProgram = Utils::createShaderProgram("/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/vertShader.glsl","/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/fragShader.glsl");
     // 创建顶点数组缓冲区
     glGenVertexArrays(numVAOs,vao);
     glBindVertexArray(vao[0]);
@@ -157,7 +49,6 @@ void display(GLFWwindow* window, double currentTime){
     glClear(GL_COLOR_BUFFER_BIT);
     // 运行着色器程序
     glUseProgram(renderingProgram);
-//    glPointSize(30.0f);
     
     x += inc;
     if (x>1.0f) {

@@ -13,6 +13,7 @@
 		0227071129C84B4100D51D8E /* libGLEW.2.2.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0227071029C84B4100D51D8E /* libGLEW.2.2.0.dylib */; };
 		0227071329C84B6700D51D8E /* libglfw.3.3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 0227071229C84B6700D51D8E /* libglfw.3.3.dylib */; };
 		0227071529C84B8000D51D8E /* libsoil2-debug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0227071429C84B8000D51D8E /* libsoil2-debug.a */; };
+		0227071C29C9611D00D51D8E /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0227071A29C9611D00D51D8E /* Utils.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -37,6 +38,8 @@
 		0227071429C84B8000D51D8E /* libsoil2-debug.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libsoil2-debug.a"; path = "../../open_gl_share/libsoil2-debug.a"; sourceTree = "<group>"; };
 		0227071829C9544A00D51D8E /* vertShader.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = vertShader.glsl; sourceTree = "<group>"; };
 		0227071929C9547300D51D8E /* fragShader.glsl */ = {isa = PBXFileReference; lastKnownFileType = text; path = fragShader.glsl; sourceTree = "<group>"; };
+		0227071A29C9611D00D51D8E /* Utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Utils.cpp; sourceTree = "<group>"; };
+		0227071B29C9611D00D51D8E /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -76,6 +79,8 @@
 			isa = PBXGroup;
 			children = (
 				0227070429C83B3D00D51D8E /* main.cpp */,
+				0227071A29C9611D00D51D8E /* Utils.cpp */,
+				0227071B29C9611D00D51D8E /* Utils.h */,
 				0227071929C9547300D51D8E /* fragShader.glsl */,
 				0227071829C9544A00D51D8E /* vertShader.glsl */,
 			);
@@ -152,6 +157,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				0227070529C83B3D00D51D8E /* main.cpp in Sources */,
+				0227071C29C9611D00D51D8E /* Utils.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
