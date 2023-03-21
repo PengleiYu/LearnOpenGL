@@ -23,6 +23,8 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <fstream>
+#include <sstream>
 
 using namespace std;
 
@@ -30,6 +32,25 @@ using namespace std;
 
 GLuint renderingProgram;
 GLuint vao[numVAOs];
+
+string readFile(const char *filePath) {
+    string content;
+    ifstream fileStream(filePath, ios::in);
+    string line = "";
+    cout << 1 << endl;
+    if(!fileStream){
+        const std::__fs::filesystem::path &currentPath = std::__fs::filesystem::current_path();
+        stringstream ss ;
+        ss << "open " << filePath << " fail, current dir=" << currentPath;
+        throw runtime_error(ss.str());
+    }
+    while (!fileStream.eof()) {
+        getline(fileStream, line);
+        content.append(line + "\n");
+    }
+    fileStream.close();
+    return content;
+}
 
 void printShaderLog(GLuint shader) {
     int len = 0;
@@ -72,25 +93,6 @@ GLuint createShaderProgram(){
     GLint vertCompiled;
     GLint fragCompiled;
     GLint linked;
-    // 顶点着色器源码
-    const char* vshaderSource =R"(
-    #version 410
-    void main(void) {
-        gl_Position = vec4(0.0,0.0,0.0,1.0);
-    }
-)";
-    // 片段着色器源码
-    const char *fshaderSource =R"(
-    #version 410
-    out vec4 color;
-    void main(void) {
-        if(gl_FragCoord.x<295)
-            color = vec4(0.0,1.0,0.0,1.0);
-        else
-            color=vec4(0.0,0.0,1.0,1.0);
-    }
-)";
-    
     
     // 创建着色器代码对象
     GLuint vShader = glCreateShader(GL_VERTEX_SHADER);
@@ -98,9 +100,14 @@ GLuint createShaderProgram(){
     // 创建着色器程序对象
     GLuint vfProgram = glCreateProgram();
     
+    string vertShaderStr = readFile("/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/vertShader.glsl");
+    string fragShaderStr = readFile("/Users/penglei/xcodeProjects/DemoOpenGL/DemoOpenGL/fragShader.glsl");
+    const char *vertShaderSrc = vertShaderStr.c_str();
+    const char *fragShaderSrc = fragShaderStr.c_str();
+    
     // 设置着色器源码
-    glShaderSource(vShader,1,&vshaderSource,NULL);
-    glShaderSource(fShader,1,&fshaderSource,NULL);
+    glShaderSource(vShader,1,&vertShaderSrc,NULL);
+    glShaderSource(fShader,1,&fragShaderSrc,NULL);
     
     // 编译着色器代码
     glCompileShader(vShader);
