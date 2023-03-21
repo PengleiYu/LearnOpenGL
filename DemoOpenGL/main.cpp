@@ -32,12 +32,14 @@ using namespace std;
 
 GLuint renderingProgram;
 GLuint vao[numVAOs];
+GLuint offsetLoc;
+float x = 0.0f;// 三角形x轴坐标
+float inc = 0.01f;// 三角形移动距离
 
 string readFile(const char *filePath) {
     string content;
     ifstream fileStream(filePath, ios::in);
     string line = "";
-    cout << 1 << endl;
     if(!fileStream){
         const std::__fs::filesystem::path &currentPath = std::__fs::filesystem::current_path();
         stringstream ss ;
@@ -150,10 +152,24 @@ void init(GLFWwindow* window){
     glBindVertexArray(vao[0]);
 }
 void display(GLFWwindow* window, double currentTime){
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.0, 0.0, 0.0, 1.0);
     glClear(GL_COLOR_BUFFER_BIT);
     // 运行着色器程序
     glUseProgram(renderingProgram);
-    glPointSize(30.0f);
+//    glPointSize(30.0f);
+    
+    x += inc;
+    if (x>1.0f) {
+        inc *= -1;
+    }else if (x<-1.0f){
+        inc *= -1;
+    }
+    // 获取指向offset的指针
+    offsetLoc=glGetUniformLocation(renderingProgram,"offset");
+    // 将x赋值给offset
+    glProgramUniform1f(renderingProgram,offsetLoc,x);
+    
     // 绘制缓冲区内容
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
