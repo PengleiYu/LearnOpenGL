@@ -71,7 +71,7 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
     renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
+    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 420.0f;
     cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;
     setupVertices();
 }
@@ -105,7 +105,7 @@ void display(GLFWwindow* window, double currentTime) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 24);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 100000);
     
 }
 

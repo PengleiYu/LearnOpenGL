@@ -15,12 +15,12 @@ mat4 buildTranslate(float x, float y, float z);
 void main(void)
 {
     float i = gl_InstanceID + tf;// 每个实例基于时间因子
-    float fac_trans = 8.0;
-    float a = sin(2.0f * i) * fac_trans; // 平移的x,y,z
-    float b = sin(3.0f * i) * fac_trans;
-    float c = sin(4.0f * i) * fac_trans;
+    float fac_trans = 401;
+    float a = sin(203.0 * i/8000.0) * fac_trans; // 平移的x,y,z
+    float b = sin(301.0 * i/4001.0) * fac_trans;
+    float c = sin(400.0 * i/6003.0) * fac_trans;
     
-    float fac_rota = 1000;
+    float fac_rota = 1.75;
     mat4 localRotX = buildRotateX(fac_rota*i);
     mat4 localRotY = buildRotateY(fac_rota*i);
     mat4 localRotZ = buildRotateZ(fac_rota*i);
