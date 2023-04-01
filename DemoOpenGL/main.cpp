@@ -39,7 +39,7 @@ GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
 
 // variable allocation for display
-GLuint mvLoc, projLoc;
+GLuint vLoc, projLoc, tfLoc;
 int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
@@ -82,8 +82,9 @@ void display(GLFWwindow* window, double currentTime) {
     
     glUseProgram(renderingProgram);
     
-    mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
+    vLoc = glGetUniformLocation(renderingProgram, "v_matrix");
     projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
+    tfLoc = glGetUniformLocation(renderingProgram, "tf");
     
     glfwGetFramebufferSize(window, &width, &height);
     aspect = (float)width / (float)height;
@@ -91,47 +92,21 @@ void display(GLFWwindow* window, double currentTime) {
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
     
-    double finalTime = currentTime;
-    for(int i=0;i<24;i++){
-        currentTime = finalTime + i;
-        // 根据时间移动不同距离
-        tMat = glm::translate(glm::mat4(1.0f),
-                              glm::vec3(
-                                        sin(0.35f*currentTime),
-                                        cos(0.52f*currentTime),
-                                        sin(0.7f*currentTime))*8.0f
-                              );
-        // 根据时间旋转不同角度
-        float rSpeed = 1.75f;
-        rMat = glm::rotate(glm::mat4(1.0f),
-                           rSpeed*(float)currentTime,
-                           glm::vec3(0.0f, 1.0f, 0.0f)
-                           );
-        rMat = glm::rotate(rMat,
-                           rSpeed*(float)currentTime,
-                           glm::vec3(1.0f,0.0f,0.0f)
-                           );
-        rMat = glm::rotate(rMat,
-                           rSpeed*(float)currentTime,
-                           glm::vec3(0.0f,0.0f,1.0f)
-                           );
-        
-        //    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(cubeLocX, cubeLocY, cubeLocZ));
-        mMat = tMat * rMat;
-        mvMat = vMat * mMat;
-        
-        glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
-        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
-        
-        glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-        glEnableVertexAttribArray(0);
-        
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LEQUAL);
-        
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-    }
+    
+    glUniformMatrix4fv(vLoc, 1, GL_FALSE, glm::value_ptr(vMat));
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
+    glUniform1f(tfLoc,(float)currentTime);
+    
+    
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(0);
+    
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 24);
+    
 }
 
 int main(void){
