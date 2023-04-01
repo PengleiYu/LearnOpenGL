@@ -43,6 +43,7 @@ GLuint mvLoc, projLoc;
 int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
+glm::mat4 tMat, rMat;
 
 void setupVertices(void) {
     float vertexPositions[108] = {
@@ -89,7 +90,31 @@ void display(GLFWwindow* window, double currentTime) {
     pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
 
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
-    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(cubeLocX, cubeLocY, cubeLocZ));
+    
+    // 根据时间移动不同距离
+    tMat = glm::translate(glm::mat4(1.0f),
+                          glm::vec3(
+                                    sin(0.35f*currentTime),
+                                    cos(0.52f*currentTime),
+                                    sin(0.7f*currentTime))*2.0f
+                          );
+    // 根据时间旋转不同角度
+    float rSpeed = 1.75f;
+    rMat = glm::rotate(glm::mat4(1.0f),
+                       rSpeed*(float)currentTime,
+                       glm::vec3(0.0f, 1.0f, 0.0f)
+                       );
+    rMat = glm::rotate(rMat,
+                       rSpeed*(float)currentTime,
+                       glm::vec3(1.0f,0.0f,0.0f)
+                       );
+    rMat = glm::rotate(rMat,
+                       rSpeed*(float)currentTime,
+                       glm::vec3(0.0f,0.0f,1.0f)
+                       );
+    
+//    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(cubeLocX, cubeLocY, cubeLocZ));
+    mMat = tMat * rMat;
     mvMat = vMat * mMat;
 
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
