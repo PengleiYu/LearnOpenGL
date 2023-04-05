@@ -61,12 +61,18 @@ void setupVertices(void) {
         1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f
     };
     
-    glGenVertexArrays(1, vao);
-    glBindVertexArray(vao[0]);
+   
+    // 创建缓冲区对象
     glGenBuffers(numVBOs, vbo);
-    
+    // 设为当前缓冲区
     glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    // 顶点数据写入缓冲区
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+    
+    // 创建顶点数组对象
+    glGenVertexArrays(1, vao);
+    // 设为当前顶点数组
+    glBindVertexArray(vao[0]);
 }
 
 void init(GLFWwindow* window) {
@@ -92,21 +98,20 @@ void display(GLFWwindow* window, double currentTime) {
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
     
-    
     glUniformMatrix4fv(vLoc, 1, GL_FALSE, glm::value_ptr(vMat));
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
     glUniform1f(tfLoc,(float)currentTime);
     
-    
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-    glEnableVertexAttribArray(0);
-    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
     
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 100000);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    // 指定顶点属性读取方式
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    // 启用顶点属性数组
+    glEnableVertexAttribArray(0);
     
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 100000);
 }
 
 int main(void){
