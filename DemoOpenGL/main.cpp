@@ -46,6 +46,8 @@ float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
 glm::mat4 tMat, rMat;
 
+stack<glm::mat4> mvStack;
+
 void setupVertices(void) {
     float vertexPositions[108] = {
         -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
@@ -87,7 +89,7 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
     renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
+    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
     cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;
     pyrLocX = 2.0f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
     setupVertices();
@@ -108,34 +110,56 @@ void display(GLFWwindow* window, double currentTime) {
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
-
-    // -------------- 立方体
-    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(cubeLocX, cubeLocY, cubeLocZ));
-    mvMat = vMat * mMat;
-    // 设置立方体统一变量
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
-    // 绑定立方体顶点数据
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-    glEnableVertexAttribArray(0);
-    // 绘制
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);
+    mvStack.push(vMat);
     
-    // -------------- 四棱锥
-    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(pyrLocX, pyrLocY, pyrLocZ));
-    mvMat = vMat * mMat;
-    // 设置四棱锥统一变量
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
-    // 绑定四棱锥顶点数据
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    // -------------- 太阳-四棱锥
+    mvStack.push(mvStack.top());
+    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
+    mvStack.push(mvStack.top());
+    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+    glBindBuffer(GL_ARRAY_BUFFER,vbo[1]);
     glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
     glEnableVertexAttribArray(0);
-    // 绘制
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 18, 1);
+    glDrawArrays(GL_TRIANGLES, 0, 18);
+    mvStack.pop();
+    // -------------- 地球-立方体
+    mvStack.push(mvStack.top());
+    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime)*4.0, 0.0f, cos((float)currentTime)*4.0));
+    mvStack.push(mvStack.top());
+    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+    glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    mvStack.pop();
+    
+    // -------------- 月亮-小立方体
+    mvStack.push(mvStack.top());
+    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime)*2.0, cos((float)currentTime)*2.0));
+    mvStack.push(mvStack.top());
+    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
+    mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+    glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+    mvStack.pop();
+    
+    // 每个物体都会留下一个mMat
+    mvStack.pop();
+    mvStack.pop();
+    mvStack.pop();
+    // pMat
+    mvStack.pop();
 }
 
 int main(void){
