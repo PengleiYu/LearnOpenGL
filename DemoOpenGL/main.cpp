@@ -120,6 +120,7 @@ void display(GLFWwindow* window, double currentTime) {
     glEnableVertexAttribArray(0);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glFrontFace(GL_CCW);
     glDrawArrays(GL_TRIANGLES, 0, 18);
     mvStack.pop();
     // -------------- 地球-立方体
@@ -133,9 +134,9 @@ void display(GLFWwindow* window, double currentTime) {
     glEnableVertexAttribArray(0);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glFrontFace(GL_CW);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     mvStack.pop();
-    
     // -------------- 月亮-小立方体
     mvStack.push(mvStack.top());
     mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime)*2.0, cos((float)currentTime)*2.0));
@@ -148,6 +149,7 @@ void display(GLFWwindow* window, double currentTime) {
     glEnableVertexAttribArray(0);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glFrontFace(GL_CW);
     glDrawArrays(GL_TRIANGLES, 0, 36);
     mvStack.pop();
     
