@@ -104,9 +104,6 @@ void display(GLFWwindow* window, double currentTime) {
     mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
     projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
     
-    glfwGetFramebufferSize(window, &width, &height);
-    aspect = (float)width / (float)height;
-    pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
@@ -162,6 +159,17 @@ void display(GLFWwindow* window, double currentTime) {
     mvStack.pop();
 }
 
+void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {
+    // -获取窗口分辨率（针对视网膜屏MAC）
+    int actualScreenWidth, actualScreenHeight;
+    glfwGetFramebufferSize(win, &actualScreenWidth, &actualScreenHeight);
+    // -确保绘制到帧缓冲区的内容与窗口匹配（针对视网膜屏MAC）
+    glViewport(0,0,actualScreenWidth, actualScreenHeight);
+    
+    aspect = (float)actualScreenWidth / (float)actualScreenHeight;
+    pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
+}
+
 int main(void){
     cout << "start main" << endl;
     // 初始化glfw
@@ -179,15 +187,8 @@ int main(void){
     
     GLFWwindow* window = glfwCreateWindow(600, 600, "Hello OpenGL", NULL, NULL);
     
-    // -获取窗口分辨率（针对视网膜屏MAC）
-    int actualScreenWidth, actualScreenHeight;
-    glfwGetFramebufferSize(window, &actualScreenWidth, &actualScreenHeight);
-    
     // 绑定window和openGL上下文，创建窗口并不会自动绑定上下文
     glfwMakeContextCurrent(window);
-    
-    // -确保绘制到帧缓冲区的内容与窗口匹配（针对视网膜屏MAC）
-    glViewport(0,0,actualScreenWidth, actualScreenHeight);
     glewExperimental = GL_TRUE;
     
     // 初始化glew
@@ -197,6 +198,9 @@ int main(void){
     // 开启垂直同步，GLFW窗口默认双缓冲
     glfwSwapInterval(1);
     
+    window_size_callback(window, 0, 0);// 只有窗口变化才执行回调，这里先执行一次
+    glfwSetWindowSizeCallback(window, window_size_callback);
+
     init(window);
     
     while (!glfwWindowShouldClose(window)) {
