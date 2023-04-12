@@ -34,12 +34,13 @@ using namespace std;
 Utils util = Utils();
 float cameraX, cameraY, cameraZ;
 float cubeLocX, cubeLocY, cubeLocZ;
+float pyrLocX, pyrLocY, pyrLocZ;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
 
 // variable allocation for display
-GLuint vLoc, projLoc, tfLoc;
+GLuint mvLoc, projLoc;
 int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
@@ -60,14 +61,23 @@ void setupVertices(void) {
         -1.0f,  1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 1.0f,  1.0f,  1.0f,
         1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f
     };
-    
+    float pyramidPositions[54] = {
+        -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,    //front
+        1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f,    //right
+        1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f,  //back
+        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  //left
+        -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, //LF
+        1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f  //RR
+    };
    
     // 创建缓冲区对象
     glGenBuffers(numVBOs, vbo);
-    // 设为当前缓冲区
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    // 顶点数据写入缓冲区
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);
+    // 写入立方体
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);// 设为当前缓冲区
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);// 顶点数据写入缓冲区
+    // 写入四棱锥
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidPositions), pyramidPositions, GL_STATIC_DRAW);
     
     // 创建顶点数组对象
     glGenVertexArrays(1, vao);
@@ -77,8 +87,9 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
     renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 420.0f;
+    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 8.0f;
     cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;
+    pyrLocX = 2.0f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
     setupVertices();
 }
 
@@ -88,30 +99,43 @@ void display(GLFWwindow* window, double currentTime) {
     
     glUseProgram(renderingProgram);
     
-    vLoc = glGetUniformLocation(renderingProgram, "v_matrix");
+    mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
     projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
-    tfLoc = glGetUniformLocation(renderingProgram, "tf");
     
     glfwGetFramebufferSize(window, &width, &height);
     aspect = (float)width / (float)height;
     pMat = glm::perspective(1.0472f, aspect, 0.1f, 1000.0f);
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
-    
-    glUniformMatrix4fv(vLoc, 1, GL_FALSE, glm::value_ptr(vMat));
-    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
-    glUniform1f(tfLoc,(float)currentTime);
-    
+
+    // -------------- 立方体
+    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(cubeLocX, cubeLocY, cubeLocZ));
+    mvMat = vMat * mMat;
+    // 设置立方体统一变量
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+    // 绑定立方体顶点数据
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(0);
+    // 绘制
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 1);
     
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
-    // 指定顶点属性读取方式
+    // -------------- 四棱锥
+    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(pyrLocX, pyrLocY, pyrLocZ));
+    mvMat = vMat * mMat;
+    // 设置四棱锥统一变量
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+    // 绑定四棱锥顶点数据
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
     glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-    // 启用顶点属性数组
     glEnableVertexAttribArray(0);
-    
-    glDrawArraysInstanced(GL_TRIANGLES, 0, 36, 100000);
+    // 绘制
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glDrawArraysInstanced(GL_TRIANGLES, 0, 18, 1);
 }
 
 int main(void){
