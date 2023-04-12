@@ -89,7 +89,7 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
     renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 12.0f;
+    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 16.0f;
     cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;
     pyrLocX = 2.0f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
     setupVertices();
@@ -122,7 +122,7 @@ void display(GLFWwindow* window, double currentTime) {
     glDepthFunc(GL_LEQUAL);
     glFrontFace(GL_CCW);
     glDrawArrays(GL_TRIANGLES, 0, 18);
-    mvStack.pop();
+    mvStack.pop();// 弹出自转mat
     // -------------- 地球-立方体
     mvStack.push(mvStack.top());
     mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime)*4.0, 0.0f, cos((float)currentTime)*4.0));
@@ -136,7 +136,7 @@ void display(GLFWwindow* window, double currentTime) {
     glDepthFunc(GL_LEQUAL);
     glFrontFace(GL_CW);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-    mvStack.pop();
+    mvStack.pop();// 弹出自转mat
     // -------------- 月亮-小立方体
     mvStack.push(mvStack.top());
     mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime)*2.0, cos((float)currentTime)*2.0));
@@ -151,14 +151,30 @@ void display(GLFWwindow* window, double currentTime) {
     glDepthFunc(GL_LEQUAL);
     glFrontFace(GL_CW);
     glDrawArrays(GL_TRIANGLES, 0, 36);
-    mvStack.pop();
+    mvStack.pop();// 弹出自转mat
     
-    // 每个物体都会留下一个mMat
-    mvStack.pop();
-    mvStack.pop();
-    mvStack.pop();
-    // pMat
-    mvStack.pop();
+    mvStack.pop();// 弹出月球mMat
+    mvStack.pop();// 弹出地球mMat
+    
+    // -------------- 第二行星-小立方体
+    mvStack.push(mvStack.top());
+    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime*2)*2.0, cos((float)currentTime*2)*3.0, 0.0f));
+    mvStack.push(mvStack.top());
+    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
+    mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+    glBindBuffer(GL_ARRAY_BUFFER,vbo[1]);
+    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glEnableVertexAttribArray(0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+    glFrontFace(GL_CW);
+    glDrawArrays(GL_TRIANGLES, 0, 18);
+    mvStack.pop();// 弹出自转mat
+    
+    mvStack.pop();// 弹出第二行星
+    mvStack.pop();// 弹出太阳mMat
+    mvStack.pop();// 弹出pMat
 }
 
 void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {
