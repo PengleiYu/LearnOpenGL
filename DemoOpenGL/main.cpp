@@ -33,53 +33,70 @@ using namespace std;
 #define numVBOs 2
 Utils util = Utils();
 float cameraX, cameraY, cameraZ;
-float cubeLocX, cubeLocY, cubeLocZ;
 float pyrLocX, pyrLocY, pyrLocZ;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
 
 // variable allocation for display
-GLuint mvLoc, projLoc;
+GLuint mvLoc, projLoc, sampLoc;
 int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
 glm::mat4 tMat, rMat;
 
-stack<glm::mat4> mvStack;
+GLuint brickTexture;
 
 void setupVertices(void) {
-    float vertexPositions[108] = {
-        -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f, 1.0f,  1.0f, -1.0f, -1.0f,  1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f, 1.0f, -1.0f,  1.0f, 1.0f,  1.0f, -1.0f,
-        1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f, 1.0f,  1.0f, -1.0f,
-        1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f, 1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f, -1.0f,  1.0f,  1.0f, 1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f, -1.0f, -1.0f,  1.0f, -1.0f, -1.0f,  1.0f,  1.0f,
-        -1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f, -1.0f,
-        1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f,  1.0f,
-        -1.0f,  1.0f, -1.0f, 1.0f,  1.0f, -1.0f, 1.0f,  1.0f,  1.0f,
-        1.0f,  1.0f,  1.0f, -1.0f,  1.0f,  1.0f, -1.0f,  1.0f, -1.0f
-    };
     float pyramidPositions[54] = {
-        -1.0f, -1.0f, 1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,    //front
-        1.0f, -1.0f, 1.0f, 1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f,    //right
-        1.0f, -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 0.0f, 1.0f, 0.0f,  //back
-        -1.0f, -1.0f, -1.0f, -1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 0.0f,  //left
-        -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, 1.0f, -1.0f, -1.0f, 1.0f, //LF
-        1.0f, -1.0f, 1.0f, -1.0f, -1.0f, -1.0f, 1.0f, -1.0f, -1.0f  //RR
+        -1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,//前侧面
+        1.0f, -1.0f, 1.0f,
+        1.0f, -1.0f, -1.0f,
+        0.0f, 1.0f, 0.0f,//右侧面
+        1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, -1.0f,
+        0.0f, 1.0f, 0.0f,//后侧面
+        -1.0f, -1.0f, -1.0f,
+        -1.0f, -1.0f, 1.0f,
+        0.0f, 1.0f, 0.0f,//左侧面
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, 1.0f,//底面1
+        1.0f, -1.0f, 1.0f,
+        -1.0f, -1.0f, -1.0f,
+        1.0f, -1.0f, -1.0f//底面2
+        };
+    float textureCoordinates[36] = {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f,//前侧面
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f,//右侧面
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f,//后侧面
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.5f, 1.0f,//左侧面
+        0.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,//底面1
+        1.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f//底面2
     };
    
     // 创建缓冲区对象
     glGenBuffers(numVBOs, vbo);
-    // 写入立方体
-    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);// 设为当前缓冲区
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexPositions), vertexPositions, GL_STATIC_DRAW);// 顶点数据写入缓冲区
     // 写入四棱锥
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);// 设为当前缓冲区
+    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidPositions), pyramidPositions, GL_STATIC_DRAW);// 顶点数据写入缓冲区
+    // 写入纹理
     glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pyramidPositions), pyramidPositions, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(textureCoordinates), textureCoordinates, GL_STATIC_DRAW);
     
     // 创建顶点数组对象
     glGenVertexArrays(1, vao);
@@ -89,9 +106,10 @@ void setupVertices(void) {
 
 void init(GLFWwindow* window) {
     renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 16.0f;
-    cubeLocX = 0.0f; cubeLocY = -2.0f; cubeLocZ = 0.0f;
-    pyrLocX = 2.0f; pyrLocY = 2.0f; pyrLocZ = 0.0f;
+    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 4.0f;
+    pyrLocX = 0.0f; pyrLocY = 0.0f; pyrLocZ = 0.0f;
+    brickTexture = Utils::loadTexture("brick1.jpg");
+
     setupVertices();
 }
 
@@ -103,78 +121,38 @@ void display(GLFWwindow* window, double currentTime) {
     
     mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
     projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
+    sampLoc = glGetUniformLocation(renderingProgram,"samp");
     
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
-    mvStack.push(vMat);
     
-    // -------------- 太阳-四棱锥
-    mvStack.push(mvStack.top());
-    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-    mvStack.push(mvStack.top());
-    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(1.0, 0.0, 0.0));
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
-    glBindBuffer(GL_ARRAY_BUFFER,vbo[1]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-    glEnableVertexAttribArray(0);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glFrontFace(GL_CCW);
-    glDrawArrays(GL_TRIANGLES, 0, 18);
-    mvStack.pop();// 弹出自转mat
-    // -------------- 地球-立方体
-    mvStack.push(mvStack.top());
-    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime)*4.0, 0.0f, cos((float)currentTime)*4.0));
-    mvStack.push(mvStack.top());
-    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 1.0, 0.0));
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
+    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(pyrLocX, pyrLocY, pyrLocZ));
+
+    mMat = glm::rotate(mMat, -0.45f, glm::vec3(1.0f, 0.0f, 0.0f));
+    mMat = glm::rotate(mMat,  0.61f, glm::vec3(0.0f, 1.0f, 0.0f));
+    mMat = glm::rotate(mMat,  0.00f, glm::vec3(0.0f, 0.0f, 1.0f));
+    
+    mvMat = vMat * mMat;
+
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+    glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
+    
     glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(0);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glFrontFace(GL_CW);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    mvStack.pop();// 弹出自转mat
-    // -------------- 月亮-小立方体
-    mvStack.push(mvStack.top());
-    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, sin((float)currentTime)*2.0, cos((float)currentTime)*2.0));
-    mvStack.push(mvStack.top());
-    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
-    mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
-    glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-    glEnableVertexAttribArray(0);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LEQUAL);
-    glFrontFace(GL_CW);
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-    mvStack.pop();// 弹出自转mat
     
-    mvStack.pop();// 弹出月球mMat
-    mvStack.pop();// 弹出地球mMat
+    glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+    glEnableVertexAttribArray(1);
     
-    // -------------- 第二行星-小立方体
-    mvStack.push(mvStack.top());
-    mvStack.top() *= glm::translate(glm::mat4(1.0f), glm::vec3(sin((float)currentTime*2)*2.0, cos((float)currentTime*2)*3.0, 0.0f));
-    mvStack.push(mvStack.top());
-    mvStack.top() *= rotate(glm::mat4(1.0f), (float)currentTime, glm::vec3(0.0, 0.0, 1.0));
-    mvStack.top() *= scale(glm::mat4(1.0f), glm::vec3(0.25f, 0.25f, 0.25f));
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvStack.top()));
-    glBindBuffer(GL_ARRAY_BUFFER,vbo[1]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, false, 0, 0);
-    glEnableVertexAttribArray(0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, brickTexture);
+    glUniform1i(sampLoc, 0);//绑定纹理，shader中不能使用binding布局
+    
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glFrontFace(GL_CW);
     glDrawArrays(GL_TRIANGLES, 0, 18);
-    mvStack.pop();// 弹出自转mat
-    
-    mvStack.pop();// 弹出第二行星
-    mvStack.pop();// 弹出太阳mMat
-    mvStack.pop();// 弹出pMat
 }
 
 void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {
