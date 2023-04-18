@@ -26,19 +26,19 @@
 #include <fstream>
 #include <sstream>
 #include "Utils.h"
-#include "Sphere.hpp"
+#include "Torus.h"
 
 using namespace std;
 
 #define numVAOs 1
-#define numVBOs 3
+#define numVBOs 4
 
 float cameraX, cameraY, cameraZ;
 float sphLocX, sphLocY, sphLocZ;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
-GLuint earthTexture;
+GLuint brickTexture;
 float rotAmt = 0.0f;
 
 
@@ -48,28 +48,27 @@ int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
 
-Sphere mySphere = Sphere(48);
+Torus myTorus(0.5f, 0.2f, 48);
 
 void setupVertices(void) {
-    std::vector<int> ind = mySphere.getIndices();
-    std::vector<glm::vec3> vert = mySphere.getVertices();
-    std::vector<glm::vec2> tex = mySphere.getTexCoords();
-    std::vector<glm::vec3> norm = mySphere.getNormals();
+    std::vector<int> ind = myTorus.getIndices();
+    std::vector<glm::vec3> vert = myTorus.getVertices();
+    std::vector<glm::vec2> tex = myTorus.getTexCoords();
+    std::vector<glm::vec3> norm = myTorus.getNormals();
     
     std::vector<float> pvalues;
     std::vector<float> tvalues;
     std::vector<float> nvalues;
     
-    int numIndices = mySphere.getNumIndices();
-    for (int i = 0; i < numIndices; i++) {
-        pvalues.push_back((vert[ind[i]]).x);
-        pvalues.push_back((vert[ind[i]]).y);
-        pvalues.push_back((vert[ind[i]]).z);
-        tvalues.push_back((tex[ind[i]]).s);
-        tvalues.push_back((tex[ind[i]]).t);
-        nvalues.push_back((norm[ind[i]]).x);
-        nvalues.push_back((norm[ind[i]]).y);
-        nvalues.push_back((norm[ind[i]]).z);
+    for (int i = 0; i < myTorus.getNumVertices(); i++) {
+        pvalues.push_back((vert[i]).x);
+        pvalues.push_back((vert[i]).y);
+        pvalues.push_back((vert[i]).z);
+        tvalues.push_back((tex[i]).s);
+        tvalues.push_back((tex[i]).t);
+        nvalues.push_back((norm[i]).x);
+        nvalues.push_back((norm[i]).y);
+        nvalues.push_back((norm[i]).z);
     }
    
     glGenBuffers(numVBOs, vbo);
@@ -82,6 +81,9 @@ void setupVertices(void) {
     // 写入法向量数组
     glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
     glBufferData(GL_ARRAY_BUFFER, nvalues.size()*4, &nvalues[0], GL_STATIC_DRAW);
+    // 写入顶点数组
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind.size()*4, &ind[0], GL_STATIC_DRAW);
     
     // 创建顶点数组对象
     glGenVertexArrays(1, vao);
@@ -93,7 +95,10 @@ void init(GLFWwindow* window) {
     renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
     cameraX = 0.0f; cameraY = 0.0f; cameraZ = 2.0f;
     sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
-    earthTexture = Utils::loadTexture("earth.jpg");
+    
+    brickTexture = Utils::loadTexture("brick1.jpg");
+    glBindTexture(GL_TEXTURE_2D, brickTexture);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 
     setupVertices();
 }
@@ -118,9 +123,8 @@ void display(GLFWwindow* window, double currentTime) {
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, earthTexture);
+    glBindTexture(GL_TEXTURE_2D, brickTexture);
     glUniform1i(sampLoc, 0);//绑定纹理，shader中不能使用binding布局
-    
     
     glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -130,9 +134,12 @@ void display(GLFWwindow* window, double currentTime) {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
     glEnableVertexAttribArray(1);
 
+    glEnable(GL_CULL_FACE);
+    glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glDrawArrays(GL_TRIANGLES, 0, mySphere.getNumIndices());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
+    glDrawElements(GL_TRIANGLES, (int)myTorus.getIndices().size(), GL_UNSIGNED_INT, 0);
 }
 
 void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {
