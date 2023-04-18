@@ -26,40 +26,89 @@
 #include <fstream>
 #include <sstream>
 #include "Utils.h"
-#include "ImportedModel.h"
+#include "Torus.h"
 
 using namespace std;
 
 #define numVAOs 1
 #define numVBOs 4
 
+float toRadians(float degrees) { return (degrees * 2.0f * 3.14159f) / 360.0f; }
+
 float cameraX, cameraY, cameraZ;
 float sphLocX, sphLocY, sphLocZ;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
-GLuint shuttleTexture;
-float rotAmt = 0.0f;
 
+Torus myTorus(0.5f, 0.2f, 48);
+int numTorusVertices = myTorus.getNumVertices();
+int numTorusIndices = myTorus.getNumIndices();
+
+glm::vec3 initialLightLoc = glm::vec3(5.0f, 2.0f, 2.0f);
+float amt = 0.0f;
 
 // variable allocation for display
-GLuint mvLoc, projLoc, sampLoc;
+GLuint mvLoc, projLoc, nLoc;
+GLuint globalAmbLoc, ambLoc, diffLoc, specLoc, posLoc, mambLoc, mdiffLoc, mspecLoc, mshiLoc;
 int width, height;
 float aspect;
-glm::mat4 pMat, vMat, mMat, mvMat;
+glm::mat4 pMat, vMat, mMat, mvMat, invTrMat, rMat;
+glm::vec3 currentLightPos, transformed;
+float lightPos[3];
 
-ImportedModel myModel("shuttle.obj");
+// white light
+float globalAmbient[4] = { 0.7f, 0.7f, 0.7f, 1.0f };
+float lightAmbient[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+float lightDiffuse[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+float lightSpecular[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+// gold material
+float* matAmb = Utils::goldAmbient();
+float* matDif = Utils::goldDiffuse();
+float* matSpe = Utils::goldSpecular();
+float matShi = Utils::goldShininess();
+
+void installLights(glm::mat4 vMatrix) {
+    transformed = glm::vec3(vMatrix * glm::vec4(currentLightPos, 1.0));
+    lightPos[0] = transformed.x;
+    lightPos[1] = transformed.y;
+    lightPos[2] = transformed.z;
+
+    // get the locations of the light and material fields in the shader
+    globalAmbLoc = glGetUniformLocation(renderingProgram, "globalAmbient");
+    ambLoc = glGetUniformLocation(renderingProgram, "light.ambient");
+    diffLoc = glGetUniformLocation(renderingProgram, "light.diffuse");
+    specLoc = glGetUniformLocation(renderingProgram, "light.specular");
+    posLoc = glGetUniformLocation(renderingProgram, "light.position");
+    mambLoc = glGetUniformLocation(renderingProgram, "material.ambient");
+    mdiffLoc = glGetUniformLocation(renderingProgram, "material.diffuse");
+    mspecLoc = glGetUniformLocation(renderingProgram, "material.specular");
+    mshiLoc = glGetUniformLocation(renderingProgram, "material.shininess");
+
+    //  set the uniform light and material values in the shader
+    glProgramUniform4fv(renderingProgram, globalAmbLoc, 1, globalAmbient);
+    glProgramUniform4fv(renderingProgram, ambLoc, 1, lightAmbient);
+    glProgramUniform4fv(renderingProgram, diffLoc, 1, lightDiffuse);
+    glProgramUniform4fv(renderingProgram, specLoc, 1, lightSpecular);
+    glProgramUniform3fv(renderingProgram, posLoc, 1, lightPos);
+    glProgramUniform4fv(renderingProgram, mambLoc, 1, matAmb);
+    glProgramUniform4fv(renderingProgram, mdiffLoc, 1, matDif);
+    glProgramUniform4fv(renderingProgram, mspecLoc, 1, matSpe);
+    glProgramUniform1f(renderingProgram, mshiLoc, matShi);
+}
 
 void setupVertices(void) {
-    std::vector<glm::vec3> vert = myModel.getVertices();
-    std::vector<glm::vec2> tex = myModel.getTextureCoords();
-    std::vector<glm::vec3> norm = myModel.getNormals();
+    std::vector<int> ind = myTorus.getIndices();
+    std::vector<glm::vec3> vert = myTorus.getVertices();
+    std::vector<glm::vec2> tex = myTorus.getTexCoords();
+    std::vector<glm::vec3> norm = myTorus.getNormals();
     
     std::vector<float> pvalues;
     std::vector<float> tvalues;
     std::vector<float> nvalues;
     
-    for (int i = 0; i < myModel.getNumVertices(); i++) {
+    for (int i = 0; i < myTorus.getNumVertices(); i++) {
         pvalues.push_back((vert[i]).x);
         pvalues.push_back((vert[i]).y);
         pvalues.push_back((vert[i]).z);
@@ -81,6 +130,9 @@ void setupVertices(void) {
     glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
     glBufferData(GL_ARRAY_BUFFER, nvalues.size()*4, &nvalues[0], GL_STATIC_DRAW);
     
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind.size() * 4, &ind[0], GL_STATIC_DRAW);
+    
     // 创建顶点数组对象
     glGenVertexArrays(1, vao);
     // 设为当前顶点数组
@@ -88,12 +140,10 @@ void setupVertices(void) {
 }
 
 void init(GLFWwindow* window) {
-    renderingProgram = Utils::createShaderProgram("vertShader.glsl", "fragShader.glsl");
-    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 2.0f;
+    renderingProgram = Utils::createShaderProgram("./GouraudShaders/vertShader.glsl", "./GouraudShaders/fragShader.glsl");
+    cameraX = 0.0f; cameraY = 0.0f; cameraZ = 1.0f;
     sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
     
-    shuttleTexture = Utils::loadTexture("spstob_1.jpg");
-
     setupVertices();
 }
 
@@ -105,20 +155,27 @@ void display(GLFWwindow* window, double currentTime) {
     
     mvLoc = glGetUniformLocation(renderingProgram, "mv_matrix");
     projLoc = glGetUniformLocation(renderingProgram, "proj_matrix");
-    sampLoc = glGetUniformLocation(renderingProgram,"samp");
-    
+    nLoc = glGetUniformLocation(renderingProgram, "norm_matrix");
+
     glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(pMat));
     
     vMat = glm::translate(glm::mat4(1.0f), glm::vec3(-cameraX, -cameraY, -cameraZ));
-    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(sphLocX, sphLocY, sphLocZ));
-    mMat = glm::rotate(mMat, (float) currentTime, glm::vec3(0.0f, 1.0f, 0.0f));
-    mvMat = vMat * mMat;
-
-    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
     
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, shuttleTexture);
-    glUniform1i(sampLoc, 0);//绑定纹理，shader中不能使用binding布局
+    mMat = glm::translate(glm::mat4(1.0f), glm::vec3(sphLocX, sphLocY, sphLocZ));
+    mMat *= glm::rotate(mMat, toRadians(35.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    
+    currentLightPos = glm::vec3(initialLightLoc.x, initialLightLoc.y, initialLightLoc.z);
+    amt = currentTime * 25.0f;
+    rMat = glm::rotate(glm::mat4(1.0f), toRadians(amt), glm::vec3(0.0f, 0.0f, 1.0f));
+    currentLightPos = glm::vec3(rMat * glm::vec4(currentLightPos, 1.0f));
+
+    installLights(vMat);
+
+    mvMat = vMat * mMat;
+    glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
+
+    invTrMat = glm::transpose(glm::inverse(mvMat));
+    glUniformMatrix4fv(nLoc, 1, GL_FALSE, glm::value_ptr(invTrMat));
     
     glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
@@ -133,7 +190,8 @@ void display(GLFWwindow* window, double currentTime) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
 
-    glDrawArrays(GL_TRIANGLES, 0, myModel.getNumVertices());
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
+    glDrawElements(GL_TRIANGLES, numTorusIndices, GL_UNSIGNED_INT, 0);
 }
 
 void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {

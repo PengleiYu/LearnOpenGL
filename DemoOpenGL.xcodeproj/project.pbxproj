@@ -49,6 +49,7 @@
 		02343E9E29EF076800BA54C7 /* ImportedModel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImportedModel.cpp; sourceTree = "<group>"; };
 		02343EA029EF078000BA54C7 /* shuttle.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = shuttle.obj; sourceTree = "<group>"; };
 		02343EA129EF078000BA54C7 /* spstob_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = spstob_1.jpg; sourceTree = "<group>"; };
+		02343EA229EF0EB100BA54C7 /* GouraudShaders */ = {isa = PBXFileReference; lastKnownFileType = folder; path = GouraudShaders; sourceTree = "<group>"; };
 		026FEF7D29E86B5F004BEA1E /* Sphere.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sphere.cpp; sourceTree = "<group>"; };
 		026FEF7E29E86B5F004BEA1E /* Sphere.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Sphere.hpp; sourceTree = "<group>"; };
 		026FEF8329E8712D004BEA1E /* brick1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = brick1.jpg; sourceTree = "<group>"; };
@@ -91,6 +92,7 @@
 		0227070329C83B3D00D51D8E /* DemoOpenGL */ = {
 			isa = PBXGroup;
 			children = (
+				02343EA229EF0EB100BA54C7 /* GouraudShaders */,
 				02343EA029EF078000BA54C7 /* shuttle.obj */,
 				02343EA129EF078000BA54C7 /* spstob_1.jpg */,
 				02343E9B29EEE67A00BA54C7 /* Torus.cpp */,
