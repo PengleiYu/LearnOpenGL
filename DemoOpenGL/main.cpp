@@ -26,7 +26,7 @@
 #include <fstream>
 #include <sstream>
 #include "Utils.h"
-#include "Torus.h"
+#include "ImportedModel.h"
 
 using namespace std;
 
@@ -38,7 +38,7 @@ float sphLocX, sphLocY, sphLocZ;
 GLuint renderingProgram;
 GLuint vao[numVAOs];
 GLuint vbo[numVBOs];
-GLuint brickTexture;
+GLuint shuttleTexture;
 float rotAmt = 0.0f;
 
 
@@ -48,19 +48,18 @@ int width, height;
 float aspect;
 glm::mat4 pMat, vMat, mMat, mvMat;
 
-Torus myTorus(0.5f, 0.2f, 48);
+ImportedModel myModel("shuttle.obj");
 
 void setupVertices(void) {
-    std::vector<int> ind = myTorus.getIndices();
-    std::vector<glm::vec3> vert = myTorus.getVertices();
-    std::vector<glm::vec2> tex = myTorus.getTexCoords();
-    std::vector<glm::vec3> norm = myTorus.getNormals();
+    std::vector<glm::vec3> vert = myModel.getVertices();
+    std::vector<glm::vec2> tex = myModel.getTextureCoords();
+    std::vector<glm::vec3> norm = myModel.getNormals();
     
     std::vector<float> pvalues;
     std::vector<float> tvalues;
     std::vector<float> nvalues;
     
-    for (int i = 0; i < myTorus.getNumVertices(); i++) {
+    for (int i = 0; i < myModel.getNumVertices(); i++) {
         pvalues.push_back((vert[i]).x);
         pvalues.push_back((vert[i]).y);
         pvalues.push_back((vert[i]).z);
@@ -81,9 +80,6 @@ void setupVertices(void) {
     // 写入法向量数组
     glBindBuffer(GL_ARRAY_BUFFER, vbo[2]);
     glBufferData(GL_ARRAY_BUFFER, nvalues.size()*4, &nvalues[0], GL_STATIC_DRAW);
-    // 写入顶点数组
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, ind.size()*4, &ind[0], GL_STATIC_DRAW);
     
     // 创建顶点数组对象
     glGenVertexArrays(1, vao);
@@ -96,9 +92,7 @@ void init(GLFWwindow* window) {
     cameraX = 0.0f; cameraY = 0.0f; cameraZ = 2.0f;
     sphLocX = 0.0f; sphLocY = 0.0f; sphLocZ = -1.0f;
     
-    brickTexture = Utils::loadTexture("brick1.jpg");
-    glBindTexture(GL_TEXTURE_2D, brickTexture);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    shuttleTexture = Utils::loadTexture("spstob_1.jpg");
 
     setupVertices();
 }
@@ -123,7 +117,7 @@ void display(GLFWwindow* window, double currentTime) {
     glUniformMatrix4fv(mvLoc, 1, GL_FALSE, glm::value_ptr(mvMat));
     
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, brickTexture);
+    glBindTexture(GL_TEXTURE_2D, shuttleTexture);
     glUniform1i(sampLoc, 0);//绑定纹理，shader中不能使用binding布局
     
     glBindBuffer(GL_ARRAY_BUFFER,vbo[0]);
@@ -138,8 +132,8 @@ void display(GLFWwindow* window, double currentTime) {
     glFrontFace(GL_CCW);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, vbo[3]);
-    glDrawElements(GL_TRIANGLES, (int)myTorus.getIndices().size(), GL_UNSIGNED_INT, 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, myModel.getNumVertices());
 }
 
 void window_size_callback(GLFWwindow* win, int newWidth, int newHeight) {

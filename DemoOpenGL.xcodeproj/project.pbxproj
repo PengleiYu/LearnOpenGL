@@ -15,6 +15,7 @@
 		0227071529C84B8000D51D8E /* libsoil2-debug.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0227071429C84B8000D51D8E /* libsoil2-debug.a */; };
 		0227071C29C9611D00D51D8E /* Utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0227071A29C9611D00D51D8E /* Utils.cpp */; };
 		02343E9C29EEE67A00BA54C7 /* Torus.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 02343E9B29EEE67A00BA54C7 /* Torus.cpp */; };
+		02343E9F29EF076800BA54C7 /* ImportedModel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 02343E9E29EF076800BA54C7 /* ImportedModel.cpp */; };
 		026FEF7F29E86B5F004BEA1E /* Sphere.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 026FEF7D29E86B5F004BEA1E /* Sphere.cpp */; };
 /* End PBXBuildFile section */
 
@@ -44,6 +45,10 @@
 		0227071B29C9611D00D51D8E /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
 		02343E9A29EEE67A00BA54C7 /* Torus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Torus.h; sourceTree = "<group>"; };
 		02343E9B29EEE67A00BA54C7 /* Torus.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Torus.cpp; sourceTree = "<group>"; };
+		02343E9D29EF076800BA54C7 /* ImportedModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ImportedModel.h; sourceTree = "<group>"; };
+		02343E9E29EF076800BA54C7 /* ImportedModel.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ImportedModel.cpp; sourceTree = "<group>"; };
+		02343EA029EF078000BA54C7 /* shuttle.obj */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = shuttle.obj; sourceTree = "<group>"; };
+		02343EA129EF078000BA54C7 /* spstob_1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = spstob_1.jpg; sourceTree = "<group>"; };
 		026FEF7D29E86B5F004BEA1E /* Sphere.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = Sphere.cpp; sourceTree = "<group>"; };
 		026FEF7E29E86B5F004BEA1E /* Sphere.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = Sphere.hpp; sourceTree = "<group>"; };
 		026FEF8329E8712D004BEA1E /* brick1.jpg */ = {isa = PBXFileReference; lastKnownFileType = image.jpeg; path = brick1.jpg; sourceTree = "<group>"; };
@@ -86,7 +91,11 @@
 		0227070329C83B3D00D51D8E /* DemoOpenGL */ = {
 			isa = PBXGroup;
 			children = (
+				02343EA029EF078000BA54C7 /* shuttle.obj */,
+				02343EA129EF078000BA54C7 /* spstob_1.jpg */,
 				02343E9B29EEE67A00BA54C7 /* Torus.cpp */,
+				02343E9E29EF076800BA54C7 /* ImportedModel.cpp */,
+				02343E9D29EF076800BA54C7 /* ImportedModel.h */,
 				02343E9A29EEE67A00BA54C7 /* Torus.h */,
 				0227070429C83B3D00D51D8E /* main.cpp */,
 				026FEF8629E872F5004BEA1E /* earth.jpg */,
@@ -173,6 +182,7 @@
 				0227070529C83B3D00D51D8E /* main.cpp in Sources */,
 				026FEF7F29E86B5F004BEA1E /* Sphere.cpp in Sources */,
 				0227071C29C9611D00D51D8E /* Utils.cpp in Sources */,
+				02343E9F29EF076800BA54C7 /* ImportedModel.cpp in Sources */,
 				02343E9C29EEE67A00BA54C7 /* Torus.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
